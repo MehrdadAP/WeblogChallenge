@@ -28,5 +28,9 @@ Therefore, in the solution, client ip, port and browser information have been us
  
 ## Result
 * average duration of all sessions: 563.11 seconds
-* most engaged ip address (without considering port and browser information): 119.81.61.166 which ws active for 672560 seconds
+* most engaged user:   
+user_ip_port: 103.29.159.138:57045  
+user_agent: Mozilla/5.0 (Windows NT 6.1; rv:21.0) Gecko/20100101 Firefox/21.0  
+Session time: 3007 seconds  
+
 * result of number of unique urls visited per session is also provided in the solution. Since the result is huge it cannot be presented here.

@@ -32,9 +32,7 @@ object Main {
   // added derived columns
   val SESSION_ID_COL = "session_id"
   val SESSION_DURATION = "session_duration_in_seconds"
-  val TOTAL_SESSION_DURATION = "total_session_duration_in_seconds"
   val URL_PER_SESSION_COUNT_COL = "url_per_session_count"
-  val CLIENT_IP_COL = "client_ip"
 
   val schema = StructType(Array(
     StructField(TIMESTAMP_COL, TimestampType, true),
@@ -70,18 +68,19 @@ object Main {
     sessionizedDf.show(10)
 
     // Finding average duration of all sessions
-    println("-"*10 + " average duration all sessions  " + "-"*10)
+    println("-" * 10 + " average duration all sessions  " + "-" * 10)
     sessionizedDf.agg(avg(col(SESSION_DURATION))).show(false)
 
     // There could possibly be more than one ip with max duration time
     val mostEngagedIpsDf: DataFrame = findMostEngagedIPs(sessionizedDf)
-    println("-"*10 + " most engaged IPs " + "-"*10)
+    println("-" * 10 + " most engaged IPs " + "-" * 10)
     println(s"number of most engaged IPs: ${mostEngagedIpsDf.count}")
-    mostEngagedIpsDf.show()
+    mostEngagedIpsDf.show(false)
 
     // unique urls visited per session
-    val urlPerSessionDf = sessionizedDf.select(CLIENT_IP_PORT_COL, USER_AGENT_COL, SESSION_ID_COL, URL_PER_SESSION_COUNT_COL)
-    println("-"*10 + " URLs visited per session " + "-"*10)
+    val urlPerSessionDf = sessionizedDf.select(CLIENT_IP_PORT_COL, USER_AGENT_COL,
+      SESSION_ID_COL, URL_PER_SESSION_COUNT_COL)
+    println("-" * 10 + " URLs visited per session " + "-" * 10)
     urlPerSessionDf.show()
 
     spark.close()
@@ -98,11 +97,11 @@ object Main {
   def sessionize(df: DataFrame): DataFrame = {
     /**
       * Assumptions:
-      *         -Session where session_time = 0 will be filtered out
-      *         -
+      * -Session where session_time = 0 will be filtered out
+      * -
       * output:
-      *   Dataframe with the following columns:
-      *     CLIENT_IP_PORT_COL, USER_AGENT_COL, SESSION_ID_COL, SESSION_DURATION, URL_PER_SESSION_COUNT_COL
+      * Dataframe with the following columns:
+      * CLIENT_IP_PORT_COL, USER_AGENT_COL, SESSION_ID_COL, SESSION_DURATION, URL_PER_SESSION_COUNT_COL
       */
 
 
@@ -128,19 +127,15 @@ object Main {
 
   def findMostEngagedIPs(sessionizedDf: DataFrame): DataFrame = {
     /**
-      * Extracting client IP address from ip:port and sum duration of all sessions for each ip
+      * Finding the maximum session duration and filtering sessions where session_duration = max_duration
       *
       * output:
-      *   Dataframe with columns: CLIENT_IP_COL, TOTAL_SESSION_DURATION
+      * Dataframe with columns as same as input dataframe
       */
 
-    val sessionsTimeByIpDf = sessionizedDf.withColumn(CLIENT_IP_COL, split(col(CLIENT_IP_PORT_COL), ":")(0))
-      .groupBy(CLIENT_IP_COL)
-      .agg(sum(SESSION_DURATION).alias(TOTAL_SESSION_DURATION)).cache()
-
-    val longestSessionTime: Long = sessionsTimeByIpDf.select(max(col(TOTAL_SESSION_DURATION))).take(1).head.getAs[Long](0)
-    val mostEngagedIpsDf = sessionsTimeByIpDf.filter(col(TOTAL_SESSION_DURATION) === longestSessionTime)
-      .select(CLIENT_IP_COL, TOTAL_SESSION_DURATION)
+    val longestSessionTime: Long = sessionizedDf.select(max(col(SESSION_DURATION)))
+      .take(1).head.getAs[Long](0)
+    val mostEngagedIpsDf = sessionizedDf.filter(col(SESSION_DURATION) === longestSessionTime)
 
 
     mostEngagedIpsDf
