@@ -97,8 +97,8 @@ object Main {
   def sessionize(df: DataFrame): DataFrame = {
     /**
       * Assumptions:
-      * -Session where session_time = 0 will be filtered out
-      * -
+      * - Session where session_time = 0 will be filtered out
+      *
       * output:
       * Dataframe with the following columns:
       * CLIENT_IP_PORT_COL, USER_AGENT_COL, SESSION_ID_COL, SESSION_DURATION, URL_PER_SESSION_COUNT_COL
@@ -136,8 +136,7 @@ object Main {
     val longestSessionTime: Long = sessionizedDf.select(max(col(SESSION_DURATION)))
       .take(1).head.getAs[Long](0)
     val mostEngagedIpsDf = sessionizedDf.filter(col(SESSION_DURATION) === longestSessionTime)
-
-
+    
     mostEngagedIpsDf
   }
 
